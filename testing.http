@@ -1,0 +1,50 @@
+@base = http://localhost:3000
+@token = {{register.response.body.token}}
+
+### Health Check
+GET {{base}}/health
+
+### Register
+# @name register
+POST {{base}}/register
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "passwordClearText": "password123"
+}
+
+### Login
+# @name login
+POST {{base}}/login
+Content-Type: application/json
+
+{
+    "email": "test@example.com",
+    "passwordClearText": "password123"
+}
+
+### Create Link (authenticated)
+POST {{base}}/link
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "targetUrl": "https://example.com"
+}
+
+### Create Link with expiry (authenticated)
+POST {{base}}/link
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "targetUrl": "https://example.com",
+    "expireAt": "2026-12-31T00:00:00.000Z"
+}
+
+### Get Link by slug
+GET {{base}}/link/abcdef123456
+
+### Redirect by slug
+GET {{base}}/abcdef123456

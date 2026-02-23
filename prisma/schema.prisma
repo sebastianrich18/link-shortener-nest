@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Link {
+  id          Int          @id @default(autoincrement()) // id automatically creates an index
+  targetUrl   String
+  slug        String       @unique @db.VarChar(12) // unique automatically creates an index
+  createdAt   DateTime     @default(now())
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id])
+  expireAt    DateTime? // ? makes it nullable/optional
+  clickEvents ClickEvent[]
+
+  @@index(userId)
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           Int    @id @default(autoincrement())
+  role         Role   @default(USER)
+  email        String @unique
+  passwordHash String
+  links        Link[]
+}
+
+model ClickEvent {
+  id        Int      @id @default(autoincrement())
+  timestamp DateTime @default(now())
+  ipAddress String
+  userAgent String
+  referrer  String
+  linkId    Int
+  link      Link     @relation(fields: [linkId], references: [id])
+
+  @@index(linkId)
+}

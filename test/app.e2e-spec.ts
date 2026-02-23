@@ -1,3 +1,4 @@
+process.env.DATABASE_URL = 'fake-url-for-testing';
 process.env.JWT_SECRET = 'test-secret';
 process.env.NODE_ENV = 'test';
 

@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { UserRepository } from '../userRepository.interface';
+import { UserRepository } from '../user.repository.interface';
 import { AuthService } from './auth.service';
 import { AuthTokenPayload } from './authToken.interface';
 import { AuthenticatedRequest } from './authenticatedRequest.interface';
@@ -26,14 +26,14 @@ export class AuthGuard implements CanActivate {
 
             // attach user to request for later use in controllers via @CurrentUser decorator
             request.user = {
-                id: user.id!,
+                id: user.id,
                 email: user.email,
                 role: user.role,
             };
 
             return !!user;
         } catch (e) {
-            this.logger.warn(`Invalid JWT token: ${token}`, e);
+            this.logger.warn('Invalid JWT token: ', e);
             throw new UnauthorizedException();
         }
     }

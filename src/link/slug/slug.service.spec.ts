@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { LinkRepository } from '../linkRepository.interface';
+import { LinkRepository } from '../link.repository.interface';
 import { InMemoryLinkRepository } from '../link.repository';
 import { SlugService } from './slug.service';
 import { FailedToGenerateUniqueSlugException } from './slug.exception';

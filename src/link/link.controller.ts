@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
-import { LinkRepository } from './linkRepository.interface';
+import { LinkRepository } from './link.repository.interface';
 import { CreateLinkDto, Link, UpdateLinkDto } from './link.dto';
 import { AuthGuard } from 'src/user/auth/auth.guard';
 import { CurrentUser } from 'src/user/auth/currentUser.decorator';
@@ -7,6 +7,7 @@ import { UserContextDto } from 'src/user/user.dto';
 import { SlugService } from './slug/slug.service';
 import { LinkExpiresInThePastException, UnauthorizedLinkAccessException } from './link.exception';
 
+@UseGuards(AuthGuard)
 @Controller('link')
 export class LinkController {
     constructor(
@@ -14,7 +15,6 @@ export class LinkController {
         private readonly slugService: SlugService,
     ) {}
 
-    @UseGuards(AuthGuard)
     @Get(':slug')
     async getLink(@Param('slug') slug: string, @CurrentUser() user: UserContextDto): Promise<Link> {
         const link = await this.linkRepository.findBySlug(slug);
@@ -24,7 +24,6 @@ export class LinkController {
         return link;
     }
 
-    @UseGuards(AuthGuard)
     @Post()
     async createLink(
         @Body() createLinkDto: CreateLinkDto,
@@ -45,7 +44,6 @@ export class LinkController {
         return { slug };
     }
 
-    @UseGuards(AuthGuard)
     @Put(':slug')
     async updateLink(
         @Param('slug') slug: string,

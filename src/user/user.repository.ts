@@ -1,8 +1,8 @@
 import { UserConflictException, UserNotFoundByEmailException, UserNotFoundByIdException } from './user.exception';
-import { UserRepository } from './userRepository.interface';
+import { UserRepository } from './user.repository.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { User } from './user.dto';
+import { CreateUser, Role, User } from './user.dto';
 
 @Injectable()
 export class PrismaUserRepository extends UserRepository {
@@ -14,28 +14,44 @@ export class PrismaUserRepository extends UserRepository {
     }
 
     async findByEmail(email: string): Promise<User> {
-        const user = (await this.prisma.user.findUnique({
+        const row = await this.prisma.user.findUnique({
             where: { email },
-        })) as User;
-        if (!user) {
+        });
+        if (!row) {
             throw new UserNotFoundByEmailException(email);
         }
-        return user;
+        return {
+            id: row.id,
+            email: row.email,
+            passwordHash: row.passwordHash,
+            role: row.role as Role,
+        };
     }
 
     async findById(id: number): Promise<User> {
-        const user = (await this.prisma.user.findUnique({
+        const row = await this.prisma.user.findUnique({
             where: { id },
-        })) as User;
-        if (!user) {
+        });
+        if (!row) {
             throw new UserNotFoundByIdException(id);
         }
-        return user;
+        return {
+            id: row.id,
+            email: row.email,
+            passwordHash: row.passwordHash,
+            role: row.role as Role,
+        };
     }
 
-    async create(user: User): Promise<User> {
+    async create(user: CreateUser): Promise<User> {
         try {
-            return (await this.prisma.user.create({ data: user })) as User;
+            const row = await this.prisma.user.create({ data: user });
+            return {
+                id: row.id,
+                email: row.email,
+                passwordHash: row.passwordHash,
+                role: row.role as Role,
+            };
         } catch (e: unknown) {
             if (e instanceof Error && 'code' in e && e.code === this.UNIQUE_CONSTRAINT_VIOLATION_CODE) {
                 throw new UserConflictException(user.email);
@@ -69,9 +85,9 @@ export class InMemoryUserRepository extends UserRepository {
         });
     }
 
-    async create(user: User): Promise<User> {
+    async create(user: CreateUser): Promise<User> {
         return new Promise((resolve) => {
-            const newUser = { ...user, id: this.users.length + 1 };
+            const newUser: User = { ...user, id: this.users.length + 1 };
             this.users.push(newUser);
             resolve(newUser);
         });

@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { RedirectController } from './redirect/redirect.controller';
 import { PrismaLinkRepository } from './link.repository';
 import { LinkController } from './link.controller';
 import { UserModule } from 'src/user/user.module';
-import { LinkRepository } from './linkRepository.interface';
+import { LinkRepository } from './link.repository.interface';
 import { SlugService } from './slug/slug.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { RedirectController } from './redirect/redirect.controller';
 
 @Module({
     imports: [UserModule, PrismaModule],

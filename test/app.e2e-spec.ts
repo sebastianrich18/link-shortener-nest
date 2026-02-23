@@ -1,15 +1,16 @@
 process.env.JWT_SECRET = 'test-secret';
+process.env.NODE_ENV = 'test';
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
-import { UserRepository } from 'src/user/userRepository.interface';
+import { UserRepository } from 'src/user/user.repository.interface';
 import { InMemoryUserRepository } from 'src/user/user.repository';
-import { LinkRepository } from 'src/link/linkRepository.interface';
+import { LinkRepository } from 'src/link/link.repository.interface';
 import { InMemoryLinkRepository } from 'src/link/link.repository';
-import { Link } from 'src/link/link.dto';
+import { CreateLink, Link } from 'src/link/link.dto';
 import { User } from 'src/user/user.dto';
 
 describe('App (e2e)', () => {
@@ -81,7 +82,7 @@ describe('App (e2e)', () => {
             await request(app.getHttpServer())
                 .post('/login')
                 .send({ passwordClearText: 'password123', email: 'john.doe@example.com' })
-                .expect(201)
+                .expect(200)
                 .expect((res) => {
                     expect((res.body as { token: string }).token).toBeDefined();
                 });
@@ -226,7 +227,7 @@ describe('App (e2e)', () => {
                 await request(app.getHttpServer())
                     .get(`/link/${slug}`)
                     .set('Authorization', `Bearer ${token2}`)
-                    .expect(401);
+                    .expect(403);
             });
 
             it('allows users to update their own links', async () => {
@@ -298,7 +299,7 @@ describe('App (e2e)', () => {
                 await request(app.getHttpServer())
                     .get(`/link/${slug}`)
                     .set('Authorization', `Bearer ${token2}`)
-                    .expect(401);
+                    .expect(403);
             });
         });
 
@@ -328,7 +329,7 @@ describe('App (e2e)', () => {
                     slug: 'expiredslug12',
                     userId: 1,
                     expireAt: new Date(Date.now() - 1000),
-                } as Link);
+                } as CreateLink);
 
                 await request(app.getHttpServer()).get('/expiredslug12').expect(410);
             });

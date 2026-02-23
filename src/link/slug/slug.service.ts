@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LinkNotFoundException } from '../link.exception';
-import { LinkRepository } from '../linkRepository.interface';
+import { LinkRepository } from '../link.repository.interface';
 import { FailedToGenerateUniqueSlugException } from './slug.exception';
 
 @Injectable()
@@ -24,7 +24,12 @@ export class SlugService {
     private generateSlug(): string {
         return Array.from(
             { length: this.slugLength },
-            () => this.characters[Math.floor(Math.random() * this.characters.length)],
+            () =>
+                this.characters[
+                    Math.floor(
+                        (crypto.getRandomValues(new Uint32Array(1))[0] / (0xffffffff + 1)) * this.characters.length,
+                    )
+                ],
         ).join('');
     }
 

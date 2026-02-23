@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Role, User } from 'src/user/user.dto';
-import { UserRepository } from 'src/user/userRepository.interface';
+import { UserRepository } from 'src/user/user.repository.interface';
 import { UserNotFoundByEmailException } from 'src/user/user.exception';
 import * as argon2 from 'argon2'; // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 import { JwtService } from '@nestjs/jwt';
@@ -49,7 +49,7 @@ export class AuthService {
         try {
             return await this.jwtService.verifyAsync(token);
         } catch (e) {
-            this.logger.warn(`Invalid JWT token: ${token}`, e);
+            this.logger.warn('Invalid JWT token: ', e);
             throw new InvalidCredentialsException();
         }
     }

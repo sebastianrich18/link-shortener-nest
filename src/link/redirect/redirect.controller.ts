@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Res } from '@nestjs/common';
 import { type Response } from 'express';
-import { LinkRepository } from '../linkRepository.interface';
+import { LinkRepository } from '../link.repository.interface';
 
 @Controller()
 export class RedirectController {

@@ -9,9 +9,9 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
     imports: [
-        ConfigModule.forRoot(),
+        ConfigModule.forRoot({ isGlobal: true }),
         // DevtoolsModule.register({
-        //     http: process.env.NODE_ENV !== 'production',
+        //     http: process.env.NODE_ENV === 'local',
         // }),
         LinkModule,
         UserModule,

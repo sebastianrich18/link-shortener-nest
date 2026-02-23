@@ -20,6 +20,6 @@ export class LinkExpiresInThePastException extends HttpException {
 
 export class UnauthorizedLinkAccessException extends HttpException {
     constructor() {
-        super(`Unauthorized access, you do not have permission to access this resource`, 401);
+        super(`Unauthorized access, you do not have permission to access this resource`, 403);
     }
 }

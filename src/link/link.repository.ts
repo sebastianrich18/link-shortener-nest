@@ -25,9 +25,9 @@ export class PrismaLinkRepository extends LinkRepository {
             id: row.id,
             targetUrl: row.targetUrl,
             slug: row.slug,
-            createdAt: row.createdAt,
+            createdAt: row.createdAt.toISOString(),
             userId: row.userId,
-            expireAt: row.expireAt ?? undefined,
+            expireAt: row.expireAt?.toISOString(),
         };
     }
 
@@ -81,7 +81,7 @@ export class InMemoryLinkRepository extends LinkRepository {
             this.links.push({
                 ...link,
                 id: this.links.length + 1,
-                createdAt: new Date(),
+                createdAt: new Date().toISOString(),
             });
             resolve();
         });

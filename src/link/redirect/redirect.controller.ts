@@ -1,20 +1,24 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
-import { type Response } from 'express';
+import { Controller, Get, Param, Redirect } from '@nestjs/common';
 import { LinkRepository } from '../link.repository.interface';
+import { ApiFoundResponse, ApiGoneResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { LinkIsExpiredException } from '../link.exception';
 
 @Controller()
 export class RedirectController {
     constructor(private readonly linkRepository: LinkRepository) {}
 
+    @ApiFoundResponse({ description: 'Redirects to the target URL' })
+    @ApiGoneResponse({ description: 'Link has expired' })
+    @ApiNotFoundResponse({ description: 'Link not found' })
     @Get(':slug')
-    async redirect(@Param('slug') slug: string, @Res() res: Response): Promise<void> {
+    @Redirect()
+    async redirect(@Param('slug') slug: string): Promise<{ url: string; statusCode: number }> {
         const link = await this.linkRepository.findBySlug(slug);
 
-        if (link.expireAt && link.expireAt < new Date()) {
-            res.status(410).send('Link has expired');
-            return;
+        if (link.expireAt && new Date(link.expireAt) < new Date()) {
+            throw new LinkIsExpiredException();
         }
 
-        res.redirect(link.targetUrl);
+        return { url: link.targetUrl, statusCode: 302 };
     }
 }

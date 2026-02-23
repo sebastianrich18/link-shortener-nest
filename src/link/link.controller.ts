@@ -1,12 +1,26 @@
-import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { LinkRepository } from './link.repository.interface';
-import { CreateLinkDto, Link, UpdateLinkDto } from './link.dto';
+import { CreateLinkDto, Link, LinkCreated, UpdateLinkDto } from './link.dto';
 import { AuthGuard } from 'src/user/auth/auth.guard';
 import { CurrentUser } from 'src/user/auth/currentUser.decorator';
 import { UserContextDto } from 'src/user/user.dto';
 import { SlugService } from './slug/slug.service';
 import { LinkExpiresInThePastException, UnauthorizedLinkAccessException } from './link.exception';
+import {
+    ApiBadRequestResponse,
+    ApiBearerAuth,
+    ApiCreatedResponse,
+    ApiForbiddenResponse,
+    ApiNoContentResponse,
+    ApiNotFoundResponse,
+    ApiOkResponse,
+    ApiOperation,
+    ApiTags,
+    ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
+@ApiTags('Links')
+@ApiBearerAuth()
 @UseGuards(AuthGuard)
 @Controller('link')
 export class LinkController {
@@ -16,6 +30,11 @@ export class LinkController {
     ) {}
 
     @Get(':slug')
+    @ApiOperation({ summary: 'Get link details by slug' })
+    @ApiOkResponse({ description: 'Link details', type: Link })
+    @ApiNotFoundResponse({ description: 'Link not found' })
+    @ApiForbiddenResponse({ description: 'You do not own this link' })
+    @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
     async getLink(@Param('slug') slug: string, @CurrentUser() user: UserContextDto): Promise<Link> {
         const link = await this.linkRepository.findBySlug(slug);
         if (link.userId !== user.id) {
@@ -25,13 +44,14 @@ export class LinkController {
     }
 
     @Post()
-    async createLink(
-        @Body() createLinkDto: CreateLinkDto,
-        @CurrentUser() user: UserContextDto,
-    ): Promise<{ slug: string }> {
+    @ApiOperation({ summary: 'Create a shortened link' })
+    @ApiCreatedResponse({ description: 'Link created, returns generated slug', type: LinkCreated })
+    @ApiBadRequestResponse({ description: 'Invalid URL or expiration date in the past' })
+    @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
+    async createLink(@Body() createLinkDto: CreateLinkDto, @CurrentUser() user: UserContextDto): Promise<LinkCreated> {
         const slug = await this.slugService.generateUniqueSlug();
 
-        if (createLinkDto.expireAt && createLinkDto.expireAt < new Date()) {
+        if (createLinkDto.expireAt && new Date(createLinkDto.expireAt) < new Date()) {
             throw new LinkExpiresInThePastException();
         }
 
@@ -45,6 +65,13 @@ export class LinkController {
     }
 
     @Put(':slug')
+    @HttpCode(204)
+    @ApiOperation({ summary: 'Update an existing link' })
+    @ApiNoContentResponse({ description: 'Link updated successfully' })
+    @ApiNotFoundResponse({ description: 'Link not found' })
+    @ApiForbiddenResponse({ description: 'You do not own this link' })
+    @ApiBadRequestResponse({ description: 'Invalid URL, expiration date in the past, or extra fields' })
+    @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT token' })
     async updateLink(
         @Param('slug') slug: string,
         @Body() updateLinkDto: UpdateLinkDto,
@@ -55,7 +82,7 @@ export class LinkController {
             throw new UnauthorizedLinkAccessException();
         }
 
-        if (updateLinkDto.expireAt && updateLinkDto.expireAt < new Date()) {
+        if (updateLinkDto.expireAt && new Date(updateLinkDto.expireAt) < new Date()) {
             throw new LinkExpiresInThePastException();
         }
 

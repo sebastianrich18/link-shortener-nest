@@ -3,6 +3,7 @@ import { InMemoryCacheService } from './cache.service';
 import { ExecutionContext, CallHandler } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { of, lastValueFrom } from 'rxjs';
+import { RedirectResponse } from '../redirect/redirect.dto';
 
 function createMockContext(slug?: string) {
     const request = { params: { slug } };
@@ -26,8 +27,8 @@ function createMockAdapterHost() {
     return { httpAdapterHost, headers };
 }
 
-function createMockHandler(response: unknown): CallHandler {
-    return { handle: () => of(response) } as CallHandler;
+function createMockHandler(response: RedirectResponse): CallHandler<RedirectResponse> {
+    return { handle: () => of(response) };
 }
 
 describe('CacheAsideLinkInterceptor', () => {
@@ -44,27 +45,27 @@ describe('CacheAsideLinkInterceptor', () => {
 
     it('passes through when no slug param exists', async () => {
         const { context } = createMockContext(undefined);
-        const handler = createMockHandler({ url: 'https://example.com', statusCode: 302 });
+        const handler = createMockHandler({ url: 'https://example.com', statusCode: 302, expireAt: null });
         const result$ = await interceptor.intercept(context, handler);
         const value = await lastValueFrom(result$);
-        expect(value).toEqual({ url: 'https://example.com', statusCode: 302 });
+        expect(value).toEqual({ url: 'https://example.com', statusCode: 302, expireAt: null });
     });
 
     it('returns cached value and sets X-Cache HIT header', async () => {
-        await cache.set('link:abc123', { url: 'https://cached.com', statusCode: 302 });
+        await cache.set('link:abc123', { url: 'https://cached.com', statusCode: 302, expireAt: null });
 
         const { context } = createMockContext('abc123');
-        const handler = { handle: jest.fn() } as unknown as CallHandler;
+        const handler = { handle: jest.fn() } as unknown as CallHandler<RedirectResponse>;
         const result$ = await interceptor.intercept(context, handler);
         const value = await lastValueFrom(result$);
 
-        expect(value).toEqual({ url: 'https://cached.com', statusCode: 302 });
+        expect(value).toEqual({ url: 'https://cached.com', statusCode: 302, expireAt: null });
         expect(headers['X-Cache']).toBe('HIT');
         expect((handler as unknown as { handle: jest.Mock }).handle).not.toHaveBeenCalled();
     });
 
     it('calls handler, caches result, and sets X-Cache MISS header', async () => {
-        const response = { url: 'https://example.com', statusCode: 302 };
+        const response = { url: 'https://example.com', statusCode: 302, expireAt: null };
         const { context } = createMockContext('newslug');
         const handler = createMockHandler(response);
 
@@ -80,10 +81,10 @@ describe('CacheAsideLinkInterceptor', () => {
     });
 
     it('does not return stale cache after deletion', async () => {
-        await cache.set('link:slug1', { url: 'https://old.com', statusCode: 302 });
+        await cache.set('link:slug1', { url: 'https://old.com', statusCode: 302, expireAt: null });
         await cache.delete('link:slug1');
 
-        const response = { url: 'https://new.com', statusCode: 302 };
+        const response = { url: 'https://new.com', statusCode: 302, expireAt: null };
         const { context } = createMockContext('slug1');
         const handler = createMockHandler(response);
 

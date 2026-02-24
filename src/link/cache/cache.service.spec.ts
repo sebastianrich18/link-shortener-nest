@@ -1,3 +1,4 @@
+import { CacheMissException } from './cache.exception';
 import { InMemoryCacheService } from './cache.service';
 
 describe('InMemoryCacheService', () => {
@@ -7,8 +8,8 @@ describe('InMemoryCacheService', () => {
         cache = new InMemoryCacheService();
     });
 
-    it('returns null for a missing key', async () => {
-        expect(await cache.get('missing')).toBeNull();
+    it('throws CacheMissException for a missing key', async () => {
+        await expect(cache.get('missing')).rejects.toThrow(CacheMissException);
     });
 
     it('stores and retrieves a value', async () => {
@@ -19,7 +20,7 @@ describe('InMemoryCacheService', () => {
     it('deletes a value', async () => {
         await cache.set('key', 'value');
         await cache.delete('key');
-        expect(await cache.get('key')).toBeNull();
+        await expect(cache.get('key')).rejects.toThrow(CacheMissException);
     });
 
     it('returns null for an expired entry', async () => {
@@ -28,7 +29,7 @@ describe('InMemoryCacheService', () => {
         expect(await cache.get('key')).toBe('value');
 
         jest.advanceTimersByTime(11_000);
-        expect(await cache.get('key')).toBeNull();
+        await expect(cache.get('key')).rejects.toThrow(CacheMissException);
         jest.useRealTimers();
     });
 

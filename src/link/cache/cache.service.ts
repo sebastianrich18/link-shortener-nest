@@ -1,6 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { CacheService } from './cache.service.interface';
+import { CacheMissException } from './cache.exception';
+import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
 @Injectable()
@@ -12,9 +13,11 @@ export class RedisCacheService extends CacheService implements OnModuleDestroy, 
         this.client = new Redis(this.configService.getOrThrow<string>('REDIS_URL'));
     }
 
-    async get<T>(key: string): Promise<T | null> {
+    async get<T>(key: string): Promise<T> {
         const value = await this.client.get(key);
-        if (value === null) return null;
+        if (value === null) {
+            throw new CacheMissException(key);
+        }
         return JSON.parse(value) as T;
     }
 
@@ -46,12 +49,12 @@ export class RedisCacheService extends CacheService implements OnModuleDestroy, 
 export class InMemoryCacheService extends CacheService {
     private readonly store = new Map<string, { value: any; expiresAt: number | null }>();
 
-    async get<T>(key: string): Promise<T | null> {
+    async get<T>(key: string): Promise<T> {
         const entry = this.store.get(key);
-        if (!entry) return null;
+        if (!entry) throw new CacheMissException(key);
         if (entry.expiresAt && entry.expiresAt < Date.now()) {
             this.store.delete(key);
-            return null;
+            throw new CacheMissException(key);
         }
         return Promise.resolve(entry.value as T);
     }

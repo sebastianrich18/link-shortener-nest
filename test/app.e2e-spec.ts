@@ -9,7 +9,7 @@ import { InMemoryCacheService } from 'src/link/cache/cache.service';
 import { InMemoryUserRepository } from 'src/user/user.repository';
 import { InMemoryLinkRepository } from 'src/link/link.repository';
 import { Test, TestingModule } from '@nestjs/testing';
-import { CreateLink, Link } from 'src/link/link.dto';
+import { Link } from 'src/link/link.dto';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from './../src/app.module';
 import { User } from 'src/user/user.dto';
@@ -328,16 +328,24 @@ describe('App (e2e)', () => {
             });
 
             it('returns 410 for expired link', async () => {
-                // Use the repo directly to skip expired in the past check from the controller
-                const linkRepository = app.get(LinkRepository);
-                await linkRepository.create({
-                    targetUrl: 'https://example.com',
-                    slug: 'expiredslug12',
-                    userId: 1,
-                    expireAt: new Date(Date.now() - 1000).toISOString(),
-                } as CreateLink);
+                jest.useFakeTimers({ advanceTimers: true });
+                try {
+                    const res = await request(app.getHttpServer())
+                        .post('/link')
+                        .set('Authorization', `Bearer ${token}`)
+                        .send({
+                            targetUrl: 'https://example.com',
+                            expireAt: new Date(Date.now() + 60_000).toISOString(),
+                        })
+                        .expect(201);
+                    const slug = (res.body as { slug: string }).slug;
 
-                await request(app.getHttpServer()).get('/expiredslug12').expect(410);
+                    jest.advanceTimersByTime(120_000);
+
+                    await request(app.getHttpServer()).get(`/${slug}`).expect(410);
+                } finally {
+                    jest.useRealTimers();
+                }
             });
         });
 
@@ -363,6 +371,33 @@ describe('App (e2e)', () => {
                     .expect(302)
                     .expect('Location', 'https://example.com')
                     .expect('X-Cache', 'HIT');
+            });
+
+            it('does not serve expired link from cache', async () => {
+                jest.useFakeTimers({ advanceTimers: true });
+                try {
+                    // Create link that expires in 60s
+                    const res = await request(app.getHttpServer())
+                        .post('/link')
+                        .set('Authorization', `Bearer ${token}`)
+                        .send({
+                            targetUrl: 'https://example.com',
+                            expireAt: new Date(Date.now() + 60_000).toISOString(),
+                        })
+                        .expect(201);
+                    const slug = (res.body as { slug: string }).slug;
+
+                    // First request — link is valid, gets cached
+                    await request(app.getHttpServer()).get(`/${slug}`).expect(302).expect('X-Cache', 'MISS');
+
+                    // Advance time past expiration
+                    jest.advanceTimersByTime(120_000);
+
+                    // Link is expired — should return 410, not a cached 302
+                    await request(app.getHttpServer()).get(`/${slug}`).expect(410);
+                } finally {
+                    jest.useRealTimers();
+                }
             });
 
             it('serves updated url after cache is invalidated', async () => {
@@ -396,6 +431,47 @@ describe('App (e2e)', () => {
                     .expect(302)
                     .expect('Location', 'https://updated.com')
                     .expect('X-Cache', 'HIT');
+            });
+
+            it('does not serve updated link from cache after expiration', async () => {
+                jest.useFakeTimers({ advanceTimers: true });
+                try {
+                    // Create link expiring in 60s
+                    const res = await request(app.getHttpServer())
+                        .post('/link')
+                        .set('Authorization', `Bearer ${token}`)
+                        .send({
+                            targetUrl: 'https://example.com',
+                            expireAt: new Date(Date.now() + 60_000).toISOString(),
+                        })
+                        .expect(201);
+                    const slug = (res.body as { slug: string }).slug;
+
+                    // Populate cache
+                    await request(app.getHttpServer()).get(`/${slug}`).expect(302).expect('X-Cache', 'MISS');
+
+                    // Update target URL (invalidates cache)
+                    await request(app.getHttpServer())
+                        .put(`/link/${slug}`)
+                        .set('Authorization', `Bearer ${token}`)
+                        .send({ targetUrl: 'https://updated.com' })
+                        .expect(204);
+
+                    // Re-populate cache with updated URL
+                    await request(app.getHttpServer())
+                        .get(`/${slug}`)
+                        .expect(302)
+                        .expect('Location', 'https://updated.com')
+                        .expect('X-Cache', 'MISS');
+
+                    // Advance time past expiration
+                    jest.advanceTimersByTime(120_000);
+
+                    // Link is expired — should return 410, not the cached updated URL
+                    await request(app.getHttpServer()).get(`/${slug}`).expect(410);
+                } finally {
+                    jest.useRealTimers();
+                }
             });
         });
     });

@@ -2,8 +2,10 @@ process.env.DATABASE_URL = 'fake-url-for-testing';
 process.env.JWT_SECRET = 'test-secret';
 process.env.NODE_ENV = 'test';
 
+import { CacheService } from 'src/link/cache/cache.service.interface';
 import { UserRepository } from 'src/user/user.repository.interface';
 import { LinkRepository } from 'src/link/link.repository.interface';
+import { InMemoryCacheService } from 'src/link/cache/cache.service';
 import { InMemoryUserRepository } from 'src/user/user.repository';
 import { InMemoryLinkRepository } from 'src/link/link.repository';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -25,6 +27,8 @@ describe('App (e2e)', () => {
             .useClass(InMemoryUserRepository)
             .overrideProvider(LinkRepository)
             .useClass(InMemoryLinkRepository)
+            .overrideProvider(CacheService)
+            .useClass(InMemoryCacheService)
             .compile();
 
         app = moduleFixture.createNestApplication();
@@ -334,6 +338,64 @@ describe('App (e2e)', () => {
                 } as CreateLink);
 
                 await request(app.getHttpServer()).get('/expiredslug12').expect(410);
+            });
+        });
+
+        describe('/:slug redirect caching (GET)', () => {
+            it('caches a redirect and serves from cache on second request', async () => {
+                const res = await request(app.getHttpServer())
+                    .post('/link')
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ targetUrl: 'https://example.com' })
+                    .expect(201);
+                const slug = (res.body as { slug: string }).slug;
+
+                // First request — cache miss
+                await request(app.getHttpServer())
+                    .get(`/${slug}`)
+                    .expect(302)
+                    .expect('Location', 'https://example.com')
+                    .expect('X-Cache', 'MISS');
+
+                // Second request — cache hit
+                await request(app.getHttpServer())
+                    .get(`/${slug}`)
+                    .expect(302)
+                    .expect('Location', 'https://example.com')
+                    .expect('X-Cache', 'HIT');
+            });
+
+            it('serves updated url after cache is invalidated', async () => {
+                const res = await request(app.getHttpServer())
+                    .post('/link')
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ targetUrl: 'https://example.com' })
+                    .expect(201);
+                const slug = (res.body as { slug: string }).slug;
+
+                // Populate cache
+                await request(app.getHttpServer()).get(`/${slug}`).expect(302).expect('X-Cache', 'MISS');
+
+                // Update the link
+                await request(app.getHttpServer())
+                    .put(`/link/${slug}`)
+                    .set('Authorization', `Bearer ${token}`)
+                    .send({ targetUrl: 'https://updated.com' })
+                    .expect(204);
+
+                // Next redirect — cache miss, picks up new URL
+                await request(app.getHttpServer())
+                    .get(`/${slug}`)
+                    .expect(302)
+                    .expect('Location', 'https://updated.com')
+                    .expect('X-Cache', 'MISS');
+
+                // Subsequent redirect — cache hit
+                await request(app.getHttpServer())
+                    .get(`/${slug}`)
+                    .expect(302)
+                    .expect('Location', 'https://updated.com')
+                    .expect('X-Cache', 'HIT');
             });
         });
     });

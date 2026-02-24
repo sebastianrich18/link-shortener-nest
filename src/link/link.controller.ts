@@ -18,6 +18,7 @@ import {
     ApiTags,
     ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { CacheService } from './cache/cache.service.interface';
 
 @ApiTags('Links')
 @ApiBearerAuth()
@@ -27,6 +28,7 @@ export class LinkController {
     constructor(
         private readonly linkRepository: LinkRepository,
         private readonly slugService: SlugService,
+        private readonly cacheService: CacheService,
     ) {}
 
     @Get(':slug')
@@ -90,5 +92,8 @@ export class LinkController {
             ...existingLink,
             ...updateLinkDto,
         });
+
+        // Invalidate cache after update
+        await this.cacheService.delete(`link:${slug}`);
     }
 }

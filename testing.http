@@ -1,5 +1,5 @@
 @base = http://localhost:3000
-@token = {{register.response.body.token}}
+@token = {{login.response.body.token}}
 
 ### Health Check
 GET {{base}}/health
@@ -47,4 +47,5 @@ Authorization: Bearer {{token}}
 GET {{base}}/link/abcdef123456
 
 ### Redirect by slug
-GET {{base}}/abcdef123456
+# @no-redirect
+GET {{base}}/09tq38w85fzu

@@ -50,6 +50,14 @@ npm run test:e2e
 
 Both commands include coverage reports. Unit test coverage outputs to `coverage/`, e2e to `coverage/e2e/`.
 
+## URLs
+
+| URL | Description |
+|-----|-------------|
+| `http://localhost:3000/admin` | AdminJS dashboard |
+| `http://localhost:3000/api` | Swagger UI |
+| `http://localhost:3000/api-json` | OpenAPI spec (JSON) |
+
 ## API
 
 | Method | Route | Auth | Description |

@@ -26,7 +26,6 @@
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
-    "@nestjs/devtools-integration": "^0.2.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.6",
@@ -67,9 +66,13 @@
     "typescript-eslint": "^8.20.0"
   },
   "overrides": {
+    "@adminjs/prisma": {
+      "@prisma/client": "$@prisma/client"
+    },
     "@tiptap/core": "2.27.2",
     "@tiptap/pm": "2.27.2",
-    "@tiptap/react": "2.27.2"
+    "@tiptap/react": "2.27.2",
+    "tinymce": "^7.0.0"
   },
   "jest": {
     "moduleFileExtensions": [

@@ -1,11 +1,11 @@
+import { LinkExpiresInThePastException, UnauthorizedLinkAccessException } from './link.exception';
 import { Body, Controller, Get, HttpCode, Param, Post, Put, UseGuards } from '@nestjs/common';
-import { LinkRepository } from './link.repository.interface';
 import { CreateLinkDto, Link, LinkCreated, UpdateLinkDto } from './link.dto';
-import { AuthGuard } from 'src/user/auth/auth.guard';
 import { CurrentUser } from 'src/user/auth/currentUser.decorator';
+import { LinkRepository } from './link.repository.interface';
+import { AuthGuard } from 'src/user/auth/auth.guard';
 import { UserContextDto } from 'src/user/user.dto';
 import { SlugService } from './slug/slug.service';
-import { LinkExpiresInThePastException, UnauthorizedLinkAccessException } from './link.exception';
 import {
     ApiBadRequestResponse,
     ApiBearerAuth,
@@ -61,7 +61,7 @@ export class LinkController {
             targetUrl: createLinkDto.targetUrl,
             expireAt: createLinkDto.expireAt,
         });
-        return { slug };
+        return { slug, targetUrl: createLinkDto.targetUrl, expireAt: createLinkDto.expireAt } as LinkCreated;
     }
 
     @Put(':slug')

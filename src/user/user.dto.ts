@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
 // Dont import prisma models here to avoid coupling the domain to db infra conserns.
 // We can add tests and/or linting rules to enforce that the DTO alligns with the DB model.

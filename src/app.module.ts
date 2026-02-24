@@ -1,18 +1,16 @@
-import { Module } from '@nestjs/common';
-import { APP_PIPE } from '@nestjs/core';
+import { createAdminModule } from './admin/admin.module';
+import { AppController } from './app.controller';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { LinkModule } from './link/link.module';
 import { UserModule } from './user/user.module';
-import { AppController } from './app.controller';
 import { ConfigModule } from '@nestjs/config';
-// import { DevtoolsModule } from '@nestjs/devtools-integration';
+import { APP_PIPE } from '@nestjs/core';
+import { Module } from '@nestjs/common';
 
 @Module({
     imports: [
         ConfigModule.forRoot({ isGlobal: true }),
-        // DevtoolsModule.register({
-        //     http: process.env.NODE_ENV === 'local',
-        // }),
+        ...(process.env.NODE_ENV !== 'test' ? [createAdminModule()] : []),
         LinkModule,
         UserModule,
     ],

@@ -1,8 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { LinkNotFoundException } from '../link.exception';
-import { LinkRepository } from '../link.repository.interface';
 import { FailedToGenerateUniqueSlugException } from './slug.exception';
-
+import { LinkRepository } from '../link.repository.interface';
+import { LinkNotFoundException } from '../link.exception';
+import { Injectable } from '@nestjs/common';
 @Injectable()
 export class SlugService {
     private readonly maxTries = 5;

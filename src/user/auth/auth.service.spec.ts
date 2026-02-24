@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
 import { UserRepository } from '../user.repository.interface';
 import { InMemoryUserRepository } from './../user.repository';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AuthService } from './auth.service';
 import { JwtModule } from '@nestjs/jwt';
 import { Role } from '../user.dto';
 

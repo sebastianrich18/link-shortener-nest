@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { CreateLink, Link } from './link.dto';
-import { LinkRepository } from './link.repository.interface';
 import { LinkConflictException, LinkNotFoundException } from './link.exception';
+import { LinkRepository } from './link.repository.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateLink, Link } from './link.dto';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class PrismaLinkRepository extends LinkRepository {

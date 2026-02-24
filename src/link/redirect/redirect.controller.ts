@@ -1,6 +1,6 @@
+import { ApiFoundResponse, ApiGoneResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { Controller, Get, Param, Redirect } from '@nestjs/common';
 import { LinkRepository } from '../link.repository.interface';
-import { ApiFoundResponse, ApiGoneResponse, ApiNotFoundResponse } from '@nestjs/swagger';
 import { LinkIsExpiredException } from '../link.exception';
 
 @Controller()

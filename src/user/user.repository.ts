@@ -1,8 +1,8 @@
 import { UserConflictException, UserNotFoundByEmailException, UserNotFoundByIdException } from './user.exception';
 import { UserRepository } from './user.repository.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
 import { CreateUser, Role, User } from './user.dto';
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class PrismaUserRepository extends UserRepository {

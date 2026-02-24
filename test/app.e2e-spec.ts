@@ -2,17 +2,17 @@ process.env.DATABASE_URL = 'fake-url-for-testing';
 process.env.JWT_SECRET = 'test-secret';
 process.env.NODE_ENV = 'test';
 
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
-import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
 import { UserRepository } from 'src/user/user.repository.interface';
-import { InMemoryUserRepository } from 'src/user/user.repository';
 import { LinkRepository } from 'src/link/link.repository.interface';
+import { InMemoryUserRepository } from 'src/user/user.repository';
 import { InMemoryLinkRepository } from 'src/link/link.repository';
+import { Test, TestingModule } from '@nestjs/testing';
 import { CreateLink, Link } from 'src/link/link.dto';
+import { INestApplication } from '@nestjs/common';
+import { AppModule } from './../src/app.module';
 import { User } from 'src/user/user.dto';
+import { App } from 'supertest/types';
+import request from 'supertest';
 
 describe('App (e2e)', () => {
     let app: INestApplication<App>;
@@ -243,7 +243,7 @@ describe('App (e2e)', () => {
                     .put(`/link/${slug}`)
                     .set('Authorization', `Bearer ${token}`)
                     .send({ targetUrl: 'https://updated-example.com' })
-                    .expect(200);
+                    .expect(204);
 
                 await request(app.getHttpServer())
                     .get(`/link/${slug}`)
@@ -324,12 +324,13 @@ describe('App (e2e)', () => {
             });
 
             it('returns 410 for expired link', async () => {
+                // Use the repo directly to skip expired in the past check from the controller
                 const linkRepository = app.get(LinkRepository);
                 await linkRepository.create({
                     targetUrl: 'https://example.com',
                     slug: 'expiredslug12',
                     userId: 1,
-                    expireAt: new Date(Date.now() - 1000),
+                    expireAt: new Date(Date.now() - 1000).toISOString(),
                 } as CreateLink);
 
                 await request(app.getHttpServer()).get('/expiredslug12').expect(410);

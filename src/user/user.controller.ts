@@ -1,8 +1,8 @@
-import { AuthService } from 'src/user/auth/auth.service';
-import { UserRepository } from './user.repository.interface';
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
-import { Role, PostUserDto } from './user.dto';
 import { InvalidCredentialsException } from './auth/auth.exception';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { UserRepository } from './user.repository.interface';
+import { AuthService } from 'src/user/auth/auth.service';
+import { Role, PostUserDto, User } from './user.dto';
 import {
     ApiOperation,
     ApiCreatedResponse,
@@ -28,13 +28,13 @@ export class RegisterUserController {
     @ApiConflictResponse({ description: 'User with this email already exists' })
     async createUser(@Body() createUserDto: PostUserDto): Promise<{ token: string }> {
         const passwordHash = await this.authService.hashPassword(createUserDto.passwordClearText);
-        const createdUser = await this.userRepository.create({
+        const createdUser: User = await this.userRepository.create({
             email: createUserDto.email,
             passwordHash,
             role: Role.USER, // admins must be created manually in the database for now
         });
 
-        const token = await this.authService.generateToken(createdUser.id, Role.USER);
+        const token = await this.authService.generateToken(createdUser.id, createdUser.role);
 
         return { token };
     }

@@ -5,11 +5,12 @@
   "testRegex": ".e2e-spec.ts$",
   "roots": ["<rootDir>/test"],
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": { "module": "commonjs" } }]
   },
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/src/$1",
-    "^generated/(.*)$": "<rootDir>/generated/$1"
+    "^generated/(.*)$": "<rootDir>/generated/$1",
+    "^(\\.{1,2}/.*)\\.js$": "$1"
   },
   "collectCoverageFrom": [
     "src/**/*.ts",

@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { FailedToGenerateUniqueSlugException } from './slug.exception';
 import { LinkRepository } from '../link.repository.interface';
 import { InMemoryLinkRepository } from '../link.repository';
+import { Test, TestingModule } from '@nestjs/testing';
 import { SlugService } from './slug.service';
-import { FailedToGenerateUniqueSlugException } from './slug.exception';
 
 describe('SlugService', () => {
     let service: SlugService;
@@ -48,7 +48,6 @@ describe('SlugService', () => {
 
         // create a link with the fixed slug to cause a conflict
         await linkRepository.create({
-            id: 1,
             userId: 1,
             slug: 'fixedslug',
             targetUrl: 'https://example.com',

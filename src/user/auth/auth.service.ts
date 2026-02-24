@@ -1,10 +1,10 @@
+import * as argon2 from 'argon2'; // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+import { UserNotFoundByEmailException } from 'src/user/user.exception';
+import { UserRepository } from 'src/user/user.repository.interface';
+import { InvalidCredentialsException } from './auth.exception';
 import { Injectable, Logger } from '@nestjs/common';
 import { Role, User } from 'src/user/user.dto';
-import { UserRepository } from 'src/user/user.repository.interface';
-import { UserNotFoundByEmailException } from 'src/user/user.exception';
-import * as argon2 from 'argon2'; // https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 import { JwtService } from '@nestjs/jwt';
-import { InvalidCredentialsException } from './auth.exception';
 
 @Injectable()
 export class AuthService {

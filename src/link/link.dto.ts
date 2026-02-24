@@ -27,6 +27,8 @@ export class Link extends createZodDto(LinkSchema) {}
 
 export const LinkCreatedSchema = z.object({
     slug: z.string(),
+    targetUrl: z.url(),
+    expireAt: z.iso.datetime().optional(),
 });
 export class LinkCreated extends createZodDto(LinkCreatedSchema) {}
 
